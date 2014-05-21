@@ -76,6 +76,7 @@ public class ESClient {
 	 * @param offset Offset
 	 * @param limit Required list size
 	 * @return <code>ESResource</code> list
+	 * @warn Not checked yet
 	 */
 	public List<ESResource> getResourceByName(String name, int offset, int limit) {
 		return searchResource.search(client, name, offset, limit);
