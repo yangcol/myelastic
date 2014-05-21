@@ -119,6 +119,9 @@ public class ESSearchUser implements ESBasicSearch{
 			System.out.println("Fail to get id:" + id);
 		}
 		
+		if (null != user) {
+			user.id = id;
+		}
 		return user;
 	}
 

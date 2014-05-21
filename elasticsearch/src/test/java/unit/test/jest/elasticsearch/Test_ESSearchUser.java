@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.app.jest.es.ESClient;
+import com.app.jest.es.ESUser;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -69,12 +70,19 @@ public class Test_ESSearchUser extends TestCase {
 		}
 		Assert.assertTrue(pass);
 		pass = false;
+		ESUser user = null;
 		try {
-			es.getUserById("123");
+			user = es.getUserById("10042062");
 		} catch (IllegalArgumentException e) {
 			pass = true;
 		}
 		
 		Assert.assertFalse(pass);
+		
+		if (null == user) {
+			System.out.println("User id is empty");
+		}
+		Assert.assertNotNull(user);
+		
 	}
 }
