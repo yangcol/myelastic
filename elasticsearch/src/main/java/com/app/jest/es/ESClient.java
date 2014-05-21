@@ -27,9 +27,11 @@ public class ESClient {
 	 * @throws Exception if configuration is not correct
 	 */
 	public ESClient(Map<String, Integer> hosts, String resourceIndex,
-			String userIndex) throws Exception {
-		if (null == hosts) {
-			throw new Exception("hosts shouldn't be null");
+			String userIndex) throws IllegalArgumentException {
+		if (null == hosts
+				|| null == resourceIndex
+				|| null == userIndex) {
+			throw new IllegalArgumentException("Input Params should not be null");
 		}
 		
 		LinkedHashSet<String> set = new LinkedHashSet<String>();
@@ -38,7 +40,7 @@ public class ESClient {
 		}
 
 		if (0 == set.size()) {
-			throw new Exception("ESClient configuration is now correct!");
+			throw new IllegalArgumentException("ESClient configuration is not correct!");
 		}
 
 		JestClientFactory factory = new JestClientFactory();
@@ -54,8 +56,15 @@ public class ESClient {
 	 * @param offset Offset
 	 * @param limit Required list size
 	 * @return <code>ESUser</code> list
+	 * @throws IllegalArgumentException
 	 */
-	public List<ESUser> getUserByName(String name, int offset, int limit) {
+	public List<ESUser> getUserByName(String name, int offset, int limit) throws IllegalArgumentException {
+		if (null == name
+				|| offset < 0
+				|| limit <= 0) {
+			throw new IllegalArgumentException("Invalid argument");
+		}
+		
 		return searchUser.search(client, name, offset, limit
 						,ESSearchUser.ORDER.BYNAME);
 	}
@@ -65,7 +74,10 @@ public class ESClient {
 	 * @param id Id
 	 * @return <code>ESUser</code> Null if not found.
 	 */
-	public ESUser getUserById(String id) {
+	public ESUser getUserById(String id) throws IllegalArgumentException {
+		if (null == id) {
+			throw new IllegalArgumentException("Invalid argument");
+		}
 		return searchUser.get(client, id);
 	}
 
@@ -78,7 +90,12 @@ public class ESClient {
 	 * @return <code>ESResource</code> list
 	 * @warn Not checked yet
 	 */
-	public List<ESResource> getResourceByName(String name, int offset, int limit) {
+	public List<ESResource> getResourceByName(String name, int offset, int limit) throws IllegalArgumentException {
+		if (null == name
+				|| offset < 0
+				|| limit <= 0) {
+			throw new IllegalArgumentException("Invalid argument");
+		}
 		return searchResource.search(client, name, offset, limit);
 	}
 }
