@@ -9,12 +9,14 @@ import org.elasticsearch.search.SearchHits;
 
 
 public class ESResourceModel {
+	
 	/**
 	 * Find resource by name
 	 * @param name
 	 * @param pageNo
 	 * @return
 	 */
+	/*
 	public static List<ESResourceContent> findResouceByName(String name, int pageNo)
 	{
 		SearchResponse response = ESBaseModel.esclient.searchUserByName(name, pageNo);
@@ -30,13 +32,14 @@ public class ESResourceModel {
 		}
 		return result;	
 	}
-	
+	*/
 	/**
 	 * Find resource by id
 	 * @param id
 	 * @param pageNo
 	 * @return
 	 */
+	/*
 	public static List<ESResourceContent> findResouceById(String id, int pageNo)
 	{
 		SearchResponse response = ESBaseModel.esclient.searchUserById(id, pageNo);
@@ -52,4 +55,5 @@ public class ESResourceModel {
 		}
 		return result;	
 	}
+	*/
 }

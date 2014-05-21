@@ -5,16 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.elasticsearch.node.NodeBuilder.*;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.node.Node;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
@@ -22,10 +18,24 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 	Map<String, Integer> HOST_PORT = new HashMap<String, Integer>();
 	final String IDENTIFY_CLUSTER_NAME = "cluster.name";
 	final String CLUSTER_NAME;
-	Node node;
 	Client client;
 	final String RESOURCE_DEST_INDEX;
 	final String USER_DEST_INDEX;
+
+	public ESClient(Map<String, Integer> hosts) {
+		client = new TransportClient();
+		for (String host:hosts.keySet()) {
+		
+			((TransportClient) client).addTransportAddress(
+					new InetSocketTransportAddress(
+							host,
+							hosts.get(host)));
+		}
+		
+		RESOURCE_DEST_INDEX = "zapya_api";
+		CLUSTER_NAME = "elasticsearch";
+		USER_DEST_INDEX = "fastooth";
+	}
 
 	/**
 	 * Default constructor
@@ -61,7 +71,6 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 	 */
 	public void close() {
 		client.close();
-		node.close();
 	}
 
 	/**
@@ -71,14 +80,15 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 	 * @return
 	 */
 	private boolean connectCluster() {
-		node = nodeBuilder().client(true).node();
+		
 		// client = node.client();
 		// Settings settings =
 		// ImmutableSettings.settingsBuilder().put("cluster.name",
 		// "cto_demo").build();
 		// .addTransportAddress(new InetSocketTransportAddress("host1", 9300))
 		// .addTransportAddress(new InetSocketTransportAddress("host2", 9300));
-
+		/*
+		node = nodeBuilder().client(true).node();
 		Settings settings = ImmutableSettings.settingsBuilder()
 				.put(IDENTIFY_CLUSTER_NAME, CLUSTER_NAME)
 				.put("client.transport.sniff", true).build();
@@ -89,7 +99,10 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 					.addTransportAddress(new InetSocketTransportAddress(key,
 							HOST_PORT.get(key)));
 		}
-
+*/
+		client = new TransportClient()
+        .addTransportAddress(new InetSocketTransportAddress("192.168.127.129", 9300))
+        .addTransportAddress(new InetSocketTransportAddress("192.168.127.139", 9300));
 		if (null != client) {
 			return true;
 		} else {
@@ -252,13 +265,13 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 				id = hit.getSource().get(ESUserSearch.USER_ID_FIELD).toString();
 			} catch (Exception e)
 			{
-				System.out.println(ESClient.class.getSimpleName() + "<>" + e.toString());
+				System.out.println(ESClient.class.getSimpleName() + "----USER_ID_FIELD Empty---- " + e.toString());
 			}
 			try {		
 				name = hit.getSource().get(ESUserSearch.USER_NAME_FIELD).toString();
 			} catch (Exception e)
 			{
-				System.out.println(ESClient.class.getSimpleName() + "<>" + e.toString());
+				System.out.println(ESClient.class.getSimpleName() + "----USER_NAME_FIELD Empty---- " + e.toString());
 			}
 			
 			result.add(new ESUserContent(id, name));
@@ -272,6 +285,11 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 	 * @return
 	 */
 	private List<ESResourceContent> digResourceContent(SearchResponse response) {
+		// Check input value
+		if (null == response){
+			return null;
+		}
+		
 		SearchHits hits = response.getHits();
 		List<ESResourceContent> result = new ArrayList<ESResourceContent>();
 		for (SearchHit hit : hits) {
@@ -282,14 +300,14 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 				
 			} catch (Exception e)
 			{
-				System.out.println(e.toString());
+				System.out.println(ESClient.class.getSimpleName() + "----RESOURCE_ID_FIELD Empty---- " + e.toString());
 			}
 			
 			try {
 				name = hit.getSource().get(ESResourceSearch.RESOURCE_FIELD).toString();
 			} catch (Exception e)
 			{
-				System.out.println(e.toString());
+				System.out.println(ESClient.class.getSimpleName() + "----RESOURCE_FIELD Empty---- " + e.toString());
 			}
 			result.add(new ESResourceContent(id, name));
 		}

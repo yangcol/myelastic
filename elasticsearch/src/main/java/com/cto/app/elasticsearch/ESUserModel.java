@@ -9,6 +9,7 @@ import org.elasticsearch.search.SearchHits;
 
 public class ESUserModel extends ESBaseModel{
 	
+	/*
 	public static List<ESUserContent> findUserByName(String name) {
 		SearchResponse response = ESBaseModel.esclient.searchUserByName(name, DEFAULT_PAGE_NO);
 		SearchHits hits = response.getHits();
@@ -20,7 +21,8 @@ public class ESUserModel extends ESBaseModel{
 		}
 		return result;	
 	}
-	
+	*/
+	/*
 	public static List<ESUserContent> findUserByID(String id) {
 		SearchResponse response = ESBaseModel.esclient.searchUserById(id, DEFAULT_PAGE_NO);
 		SearchHits hits = response.getHits();
@@ -31,5 +33,5 @@ public class ESUserModel extends ESBaseModel{
 					hit.getSource().get(ESUserSearch.USER_NAME_FIELD).toString()));
 		}
 		return result;	
-	}
+	}*/
 }

@@ -1,18 +1,23 @@
 package com.cto.app.elasticsearch;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.elasticsearch.action.search.SearchResponse;
 
-import com.cto.app.elasticsearch.ESBaseModel;
-
 
 public class Test_ESClient extends TestCase {
 
-	static ESClient es = ESBaseModel.esclient;
-	static final String RESOURCEID = "2529945";
-	static final String RESOURCENAME = "周杰伦";
+	static Map<String, Integer> hosts = new HashMap<String, Integer>();
+	static {
+		hosts.put("192.168.127.129", 9300);
+	}
+	static ESClient es = new ESClient(hosts);
+	static final String RESOURCEID = "2790121";
+	static final String RESOURCENAME = "刀郎";
 	static final String USERID = "10001";
 	static final String USERNAME = "刀郎";
 	
@@ -66,17 +71,17 @@ public class Test_ESClient extends TestCase {
 
 	public void test_serachUserByName_Json() {
 		System.out.println("test_serachUserByName_Json");
-		Assert.assertTrue(es.getUserByName(USERNAME, 0).size() > 0);
+		assertTrue(es.getUserByName(USERNAME, 0).size() > 0);
 	}
 	
 
 	public void test_serachResourceByName_Json() {
 		System.out.println("test_serachResourceByName_Json");
-		Assert.assertTrue(es.getResourceByName(RESOURCENAME, 0).size() > 0);
+		assertTrue(es.getResourceByName(RESOURCENAME, 0).size() > 0);
 	}
 	
 
 	public void test_serachResourceById_Json() {
-		Assert.assertTrue(es.getUserById(USERID, 0).size() > 0);
+		assertTrue(es.getUserById(USERID, 0).size() > 0);
 	}
 }
