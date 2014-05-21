@@ -82,6 +82,7 @@ public class Test_ESSearchUser extends TestCase {
 		if (null == user) {
 			System.out.println("User id is empty");
 		}
+		System.out.println(user.toJson().toString());
 		Assert.assertNotNull(user);
 		
 	}

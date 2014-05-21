@@ -7,8 +7,6 @@
 package com.app.jest.es;
 
 import io.searchbox.client.JestClient;
-import io.searchbox.client.JestResult;
-import io.searchbox.core.Get;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 import java.util.ArrayList;
@@ -110,19 +108,34 @@ public class ESSearchUser implements ESBasicSearch{
 	
 	public ESUser get(JestClient jc,
 			String id) {
-		Get get = new Get.Builder(this.USER_DEST_INDEX, id).build();
-		ESUser user = null;
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		searchSourceBuilder.query(QueryBuilders.matchQuery(USER_ID_FIELD, id));
+		searchSourceBuilder.from(0);
+		searchSourceBuilder.size(1);
+		
+		List<ESUser> retValue = new ArrayList<ESUser>();
+		Search search = new Search.Builder(searchSourceBuilder.toString())
+		                                .addIndex(USER_DEST_INDEX)
+		                                .build();
+		
 		try {
-			 JestResult result = jc.execute(get);
-			 user = result.getSourceAsObject(ESUser.class);
+			SearchResult result = jc.execute(search);
+			List<SearchResult.Hit<ESUser, Void>> hits = result
+					.getHits(ESUser.class);
+			for (SearchResult.Hit<ESUser, Void> hit : hits) {
+				ESUser u = hit.source;
+				retValue.add(u);
+			}
 		} catch (Exception e) {
-			System.out.println("Fail to get id:" + id);
+			System.out.println("Something wrong with elasticsearch");
+			e.printStackTrace();
 		}
 		
-		if (null != user) {
-			user.id = id;
+		if (retValue.isEmpty()) {
+			return null;
+		} else {
+			return retValue.get(0);
 		}
-		return user;
 	}
 
 }
