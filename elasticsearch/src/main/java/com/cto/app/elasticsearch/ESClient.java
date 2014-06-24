@@ -101,8 +101,8 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 		}
 */
 		client = new TransportClient()
-        .addTransportAddress(new InetSocketTransportAddress("192.168.127.129", 9300))
-        .addTransportAddress(new InetSocketTransportAddress("192.168.127.139", 9300));
+        .addTransportAddress(new InetSocketTransportAddress("192.168.127.129", 9300));
+        //.addTransportAddress(new InetSocketTransportAddress("192.168.127.139", 9300));
 		if (null != client) {
 			return true;
 		} else {

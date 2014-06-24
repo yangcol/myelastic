@@ -80,7 +80,7 @@ public class ESSearchUser implements ESBasicSearch{
 				.boost(text.length() * BOOST_SEARCH_FACTOR));
 		searchSourceBuilder.from(offset);
 		searchSourceBuilder.size(limit);
-		
+		System.out.println(searchSourceBuilder.toString());
 		List<ESUser> retValue = new ArrayList<ESUser>();
 		Search search = new Search.Builder(searchSourceBuilder.toString())
 		                                .addIndex(USER_DEST_INDEX)
