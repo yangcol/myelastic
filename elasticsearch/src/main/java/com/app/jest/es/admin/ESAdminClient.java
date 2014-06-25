@@ -326,7 +326,6 @@ public class ESAdminClient {
             throws Exception {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(QueryBuilders.matchQuery(field, text));
-        //System.out.println("Query String:" + searchSourceBuilder.toString());
         Search search = new Search.Builder(searchSourceBuilder.toString())
                 .addIndex(index)
                 .addType(type)

@@ -3,7 +3,7 @@ package unit.test.jest.elasticsearch;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.app.jest.es.ESClient;
+import com.app.jest.es.client.ESClient;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;

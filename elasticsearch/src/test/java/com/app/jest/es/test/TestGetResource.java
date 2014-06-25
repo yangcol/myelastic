@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.app.jest.es.ESClient;
-import com.app.jest.es.ESResource;
+import com.app.jest.es.client.ESClient;
+import com.app.jest.es.client.ESResource;
 
 import junit.framework.TestCase;
 

@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.app.jest.es.ESClient;
-import com.app.jest.es.ESUser;
+import com.app.jest.es.client.ESClient;
+import com.app.jest.es.client.ESUser;
 
 public class Test_ESClient {
 	static Map<String, Integer> hosts = new HashMap<String, Integer>();

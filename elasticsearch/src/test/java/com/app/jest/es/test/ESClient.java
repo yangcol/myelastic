@@ -6,11 +6,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import com.app.jest.es.AbstractSearchResult;
-import com.app.jest.es.ESResource;
-import com.app.jest.es.ESSearchResource;
-import com.app.jest.es.ESSearchUser;
-import com.app.jest.es.ESUser;
+import com.app.jest.es.client.AbstractSearchResult;
+import com.app.jest.es.client.ESResource;
+import com.app.jest.es.client.ESSearchResource;
+import com.app.jest.es.client.ESSearchUser;
+import com.app.jest.es.client.ESUser;
 
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;

@@ -2,26 +2,14 @@ package com.app.jest.es.admin;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import io.searchbox.annotations.JestId;
 import io.searchbox.client.JestResult;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import io.searchbox.core.Index;
-import org.codehaus.jackson.JsonNode;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 
-import com.app.jest.es.ESClient;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import junit.framework.Assert;
@@ -274,25 +262,13 @@ public class TestESAdminClient extends TestCase {
 
     public void testQuery() throws Exception {
         Article a = new Article();
-        a.id = "123";
-        a.author ="yang";
+        a.id = "1234";
+        a.author = "neverland";
         a.content = "my content";
         client.addDoc("test_add", "my_type", a);
-        JestResult jr = client.query("test_add", "my_type", "author", "yang");
-//        System.out.println(jr.getJsonString());
-        Gson gson = new Gson();
-        String js = jr.getJsonObject().get("took").getAsString();
-//        System.out.println(js);
-//        System.out.println(jr.getJsonObject().get("hits").getAsJsonObject().get("hits").toString());
-        a.author = "qing";
-        a.content = "constructor content";
-        JsonArray hitarrays = jr.getJsonObject().get("hits").getAsJsonObject().get("hits").getAsJsonArray();
-        for (JsonElement je : hitarrays) {
-            a = gson.fromJson(je.getAsJsonObject().get("_source").toString(), Article.class);
-//            System.out.println(a.author);
-//            System.out.println(a.content);
-            Assert.assertNotNull(a);
-        }
+        JestResult jr = client.query("test_add", "my_type", "author", a.author);
+        Assert.assertTrue("Can't find resource", jr.getJsonObject().get("hits").getAsJsonObject().get("total").getAsInt() > 0);
+        client.deleteDocument("test_add", "my_type", a.id);
     }
 
     public void testAggregations() {

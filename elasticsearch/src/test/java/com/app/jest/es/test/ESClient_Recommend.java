@@ -1,18 +1,7 @@
 package com.app.jest.es.test;
 
-import io.searchbox.client.JestClient;
-import io.searchbox.client.JestClientFactory;
-import io.searchbox.client.config.HttpClientConfig;
-import io.searchbox.core.Search;
-import io.searchbox.core.SearchResult;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.PatternSyntaxException;
@@ -21,9 +10,8 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import com.app.jest.es.ESClient;
-import com.app.jest.es.ESResource;
-import com.app.jest.es.ESUser;
+import com.app.jest.es.client.ESClient;
+import com.app.jest.es.client.ESResource;
 
 public class ESClient_Recommend {
 	static Map<String, Integer> hosts = new HashMap<String, Integer>();

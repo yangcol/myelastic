@@ -22,7 +22,7 @@ import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.terms.TermsFacetBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
-import com.app.jest.es.ESUser;
+import com.app.jest.es.client.ESUser;
 
 public class ESClient_Demo {
 	static final float BOOST_SEARCH_FACTOR = 0.5f;
