@@ -258,26 +258,25 @@ public class TestESAdminClient extends TestCase {
     }
 
     public void testQuery() throws Exception {
-
         Article a = new Article();
         a.id = "123";
         a.author ="yang";
         a.content = "my content";
         client.addDoc("test_add", "my_type", a);
         JestResult jr = client.query("test_add", "my_type", "author", "yang");
-        System.out.println(jr.getJsonString());
+//        System.out.println(jr.getJsonString());
         Gson gson = new Gson();
         String js = jr.getJsonObject().get("took").getAsString();
-        System.out.println(js);
-        System.out.println(jr.getJsonObject().get("hits").getAsJsonObject().get("hits").toString());
-        Article a = new Article();
+//        System.out.println(js);
+//        System.out.println(jr.getJsonObject().get("hits").getAsJsonObject().get("hits").toString());
         a.author = "qing";
         a.content = "constructor content";
         JsonArray hitarrays = jr.getJsonObject().get("hits").getAsJsonObject().get("hits").getAsJsonArray();
         for (JsonElement je : hitarrays) {
             a = gson.fromJson(je.getAsJsonObject().get("_source").toString(), Article.class);
-            System.out.println(a.author);
-            System.out.println(a.content);
+//            System.out.println(a.author);
+//            System.out.println(a.content);
+            Assert.assertNotNull(a);
         }
     }
 

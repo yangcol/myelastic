@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import com.app.jest.es.ESResource;
+import com.google.gson.Gson;
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;
 import io.searchbox.client.JestResult;
@@ -165,6 +166,9 @@ public class ESAdminClient {
     public <T> T getDoc(String index, String type, String id, Class<T> cl)
             throws Exception {
         JestResult jr = getDoc(index, type, id);
+        Gson gson = new Gson();
+       //gson.fromJson(jr.getJsonObject())
+        //gson.fromJson()
         return jr.getSourceAsObject(cl);
     }
 
@@ -259,6 +263,12 @@ public class ESAdminClient {
         client.execute(putMapping);
     }
 
+    /**
+     * Put template with XCOntentBuilder
+     * @param tempname
+     * @param content
+     * @throws Exception
+     */
     public void putTemplate(String tempname, XContentBuilder content)
             throws Exception {
         PutTemplate puttemplate = new PutTemplate.Builder(tempname,
