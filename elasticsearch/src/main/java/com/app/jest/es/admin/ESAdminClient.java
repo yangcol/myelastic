@@ -110,7 +110,7 @@ public class ESAdminClient {
 
     // TODO unchecked
     // Don't use it in this way. This api seems doesn't work
-    private void addDoc(String index, String type, Object source)
+    public void addDoc(String index, String type, Object source)
             throws Exception {
         Index index1 = new Index.Builder(source).index(index).type(type)
                 .build();
