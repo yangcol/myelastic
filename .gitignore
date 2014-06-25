@@ -3,7 +3,7 @@ elasticsearch/target/*
 .metadata/*
 
 *.class
-elasticsearch/target/
+.*
 elasticsearch.classpath
 elasticsearch.project
 elasticsearch.settings/
