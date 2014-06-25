@@ -206,7 +206,7 @@ public class TestESAdminClient extends TestCase {
         }
 
         int[] tags = {4, 9, 5};
-        JestResult jr = null;
+        JestResult jr;
         final String idnum = "2";
         try {
             String source = jsonBuilder().startObject().field("user", "kimchy")
@@ -215,7 +215,7 @@ public class TestESAdminClient extends TestCase {
             client.addDoc(addindex, ttype, idnum, source);
             Assert.assertEquals(true, client.docExists(addindex, ttype, idnum));
             jr = client.getDoc(addindex, ttype, idnum);
-            System.out.println("Get document: " + jr.getJsonString());
+//            System.out.println("Get document: " + jr.getJsonString());
             Assert.assertEquals("kimchy", jr.getJsonObject().get("_source").getAsJsonObject().get("user")
                     .getAsString());
         } catch (IOException e1) {
@@ -232,10 +232,25 @@ public class TestESAdminClient extends TestCase {
                 Assert.fail("Fail to delete a document");
             }
         }
-
-
     }
 
+
+    public void testAddDoc() throws Exception {
+        String index = "test_add";
+        String type = "my_type";
+        String id = "123";
+        Article a = new Article();
+        a.id = id;
+        a.author = "yang";
+        a.content = "my content";
+        if (client.docExists(index, type, id)) {
+            client.deleteDocument(index, type, id);
+        }
+        Assert.assertFalse(client.docExists(index, type, id));
+        client.addDoc(index, type, a);
+        Assert.assertTrue(client.docExists(index, type, id));
+        client.deleteDocument(index, type, id);
+    }
 
     public void testGetDoc() {
         final String addindex = "test_add";

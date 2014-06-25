@@ -1,44 +1,34 @@
 package com.app.jest.es.admin;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-import com.app.jest.es.ESResource;
-import com.google.gson.Gson;
+import com.app.jest.es.util.ESDocumentNotFoundException;
+import com.app.jest.es.util.ESSourceMapping;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;
 import io.searchbox.client.JestResult;
 import io.searchbox.client.config.ClientConfig;
-import io.searchbox.core.Bulk;
-import io.searchbox.core.Delete;
-import io.searchbox.core.Get;
-import io.searchbox.core.Index;
-import io.searchbox.core.Search;
-import io.searchbox.core.SearchResult;
-import io.searchbox.core.Update;
+import io.searchbox.core.*;
 import io.searchbox.indices.Analyze;
 import io.searchbox.indices.CreateIndex;
 import io.searchbox.indices.DeleteIndex;
 import io.searchbox.indices.IndicesExists;
-import io.searchbox.indices.aliases.AddAliasMapping;
-import io.searchbox.indices.mapping.PutMapping;
 import io.searchbox.indices.mapping.GetMapping;
+import io.searchbox.indices.mapping.PutMapping;
 import io.searchbox.indices.template.GetTemplate;
 import io.searchbox.indices.template.PutTemplate;
-
-import org.codehaus.jackson.JsonNode;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.facet.FacetBuilders;
-import org.elasticsearch.search.facet.terms.TermsFacetBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author YangQing
@@ -50,6 +40,7 @@ import com.google.gson.JsonObject;
  */
 public class ESAdminClient {
     JestClient client;
+    static Logger logger = LoggerFactory.getLogger(ESAdminClient.class);
 
     /**
      * Init admin client for correct hosts
@@ -59,6 +50,11 @@ public class ESAdminClient {
      */
     public ESAdminClient(Map<String, Integer> hosts)
             throws IllegalArgumentException {
+        checkInput(hosts);
+        if (0 == hosts.size()) {
+            logger.error("elasticsearch admin client config not correct");
+            throw new IllegalArgumentException();
+        }
         LinkedHashSet<String> set = new LinkedHashSet<String>();
         for (String key : hosts.keySet()) {
             set.add("http://" + key + ":" + hosts.get(key));
@@ -72,10 +68,6 @@ public class ESAdminClient {
         JestClientFactory factory = new JestClientFactory();
         client = factory.getObject();
         client.setServers(set);
-    }
-
-    void createTemplate(String index) {
-
     }
 
     void BuilkExcute(Bulk b) throws Exception {
@@ -92,6 +84,7 @@ public class ESAdminClient {
      * @throws Exception
      */
     public void addDoc(String index, String type, String id, String source) throws Exception {
+        checkInput(index, type, id, source);
         Index index1 = new Index.Builder(source).index(index).type(type).id(id).build();
         client.execute(index1);
     }
@@ -105,14 +98,21 @@ public class ESAdminClient {
      * @throws Exception
      */
     public void addDoc(String index, String type, String source) throws Exception {
+        checkInput(index, type, source);
         Index index1 = new Index.Builder(source).index(index).type(type).build();
         client.execute(index1);
     }
 
-    // TODO unchecked
-    // Don't use it in this way. This api seems doesn't work
+    /**
+     *Add document
+     * @param index
+     * @param type
+     * @param source
+     * @throws Exception
+     */
     public void addDoc(String index, String type, Object source)
             throws Exception {
+        checkInput(index, type, source);
         Index index1 = new Index.Builder(source).index(index).type(type)
                 .build();
         client.execute(index1);
@@ -142,14 +142,8 @@ public class ESAdminClient {
      * @param id
      * @return
      */
-    public boolean docExists(String index, String type, String id) {
-        JestResult jr = null;
-        try {
-            jr = getDoc(index, type, id);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+    public boolean docExists(String index, String type, String id) throws Exception{
+        JestResult jr = getDoc(index, type, id);
         return jr.getJsonObject().get("found").getAsBoolean();
     }
 
@@ -166,10 +160,7 @@ public class ESAdminClient {
     public <T> T getDoc(String index, String type, String id, Class<T> cl)
             throws Exception {
         JestResult jr = getDoc(index, type, id);
-        Gson gson = new Gson();
-       //gson.fromJson(jr.getJsonObject())
-        //gson.fromJson()
-        return jr.getSourceAsObject(cl);
+        return ESSourceMapping.getSourceAsObject(jr, cl);
     }
 
 
@@ -204,7 +195,7 @@ public class ESAdminClient {
      * @param num_replica
      * @throws Exception
      */
-    public void crateIndex(String index, int num_shards, int num_replica)
+    public void createIndex(String index, int num_shards, int num_replica)
             throws Exception {
         Map<String, String> settings = new HashMap<String, String>();
         settings.put("number_of_replicas", String.valueOf(num_replica));
@@ -357,9 +348,6 @@ public class ESAdminClient {
     public JestResult aggregations(String index, String type, TermsBuilder tb)
             throws Exception {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        // searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-        // TermsBuilder tb =
-        // AggregationBuilders.terms(aggrename).field(field).size(size);
         searchSourceBuilder.aggregation(tb);
         searchSourceBuilder.toString();
         Search search = new Search.Builder(searchSourceBuilder.toString())
@@ -380,6 +368,20 @@ public class ESAdminClient {
         return client.execute(getMapping);
     }
 
+    /**
+     * Check if input is null.
+     * @param inputs
+     * @throws NullPointerException If input is null
+     */
+    public void checkInput(Object... inputs) {
+        for (Object in: inputs) {
+            if (null == in) {
+                logger.error("Input param null");
+                throw new NullPointerException();
+            }
+        }
+    }
+
     void update() throws Exception {
         String script = "{\n"
                 + "    \"script\" : \"ctx._source.tags += tag\",\n"
@@ -392,15 +394,18 @@ public class ESAdminClient {
 
     /**
      * Delete a document.
-     *
      * @param index
      * @param type
      * @param id
      * @throws Exception
      */
     void deleteDocument(String index, String type, String id) throws Exception {
-        client.execute(new Delete.Builder(id).index(index).type(type).build());
-
+        if (docExists(index, type, id)) {
+           client.execute(new Delete.Builder(id).index(index).type(type).build());
+        } else {
+            logger.debug("You try to delete an unexisting document");
+            throw new ESDocumentNotFoundException();
+        }
     }
 
     void nodeDiscoverty() {
