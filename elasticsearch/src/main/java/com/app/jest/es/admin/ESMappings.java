@@ -7,18 +7,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 
- * @file ESMappings
  * @author YangQing
+ * @version 1.0
+ * @file ESMappings
  * @date 2014-6-23
  * @brief TODO
- * @version 1.0
  */
 public class ESMappings {
-	private String index;
+    private String index;
 
 	/*TODO The following code are demoed
-	 * 
+     *
 	private ESMappings(Builder builder) {
 		this.index = builder.index;
 	}
