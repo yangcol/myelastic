@@ -7,3 +7,7 @@ elasticsearch/target/*
 elasticsearch.classpath
 elasticsearch.project
 elasticsearch.settings/
+*.dic
+*.eml
+*.iml
+*.txt
