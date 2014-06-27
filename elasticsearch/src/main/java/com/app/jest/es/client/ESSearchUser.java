@@ -8,6 +8,8 @@ package com.app.jest.es.client;
 
 import com.app.jest.es.util.ESSourceMapping;
 import io.searchbox.client.JestClient;
+import io.searchbox.client.JestResult;
+import io.searchbox.core.Get;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 import java.util.ArrayList;
@@ -72,7 +74,6 @@ public class ESSearchUser {
 				.boost(text.length() * BOOST_SEARCH_FACTOR));
 		searchSourceBuilder.from(offset);
 		searchSourceBuilder.size(limit);
-		System.out.println(searchSourceBuilder.toString());
 		List<ESUser> retValue = new ArrayList<ESUser>();
 		Search search = new Search.Builder(searchSourceBuilder.toString())
 		                                .addIndex(USER_DEST_INDEX)
@@ -100,26 +101,17 @@ public class ESSearchUser {
 	
 	public static ESUser get(JestClient jc,
 			String id) {
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		searchSourceBuilder.query(QueryBuilders.matchQuery(USER_ID_FIELD, id));
-		searchSourceBuilder.from(0);
-		searchSourceBuilder.size(1);
-		
-		List<ESUser> retValue = new ArrayList<ESUser>();
-		Search search = new Search.Builder(searchSourceBuilder.toString())
-		                                .addIndex(USER_DEST_INDEX)
-		                                .build();
-
-
-        SearchResult result = null;
+        Get get = new Get.Builder(USER_DEST_INDEX, id).build();
+        ESUser rs = null;
         try {
-            result = jc.execute(search);
+            JestResult result = jc.execute(get);
+            rs = ESSourceMapping.getSourceAsObject(result, ESUser.class);
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("Search user by name:[%s] error, detail: %s", id, e.getMessage());
+            logger.error(String.format("Get user id: [%s] failed, detail: %s", id, e.getMessage()));
         }
-        return ESSourceMapping.getSourceAsObject(result, ESUser.class);
 
+        return rs;
 	}
 
 }

@@ -30,8 +30,17 @@ public class TestESUtil extends TestCase {
         if (!ESUtil.indiceExists(adminclient.getClient(), tindex)) {
             ESUtil.createIndex(adminclient.getClient(), tindex);
             ESUtil.flushIndex(adminclient.getClient());
+        } else {
+            ESUtil.deleteIndex(adminclient.getClient(), tindex);
+            ESUtil.createIndex(adminclient.getClient(), tindex);
+            ESUtil.flushIndex(adminclient.getClient());
         }
     }
+
+    public void tearDown() throws Exception {
+        ESUtil.deleteIndex(adminclient.getClient(), tindex);
+    }
+
 
     /**
      * Get setting can't be used now. TODO No settings can be used

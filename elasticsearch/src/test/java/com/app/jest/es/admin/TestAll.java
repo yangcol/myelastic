@@ -8,6 +8,7 @@ public class TestAll extends TestCase {
 	public static Test suite() {
 		TestSuite suite = new TestSuite();
 		suite.addTestSuite(TestESUtil.class);
+        suite.addTestSuite(TestESClient.class);
 		return suite;
 	}
 }

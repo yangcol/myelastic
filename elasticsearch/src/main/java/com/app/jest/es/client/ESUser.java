@@ -20,9 +20,9 @@ public class ESUser extends AbstractSearchResult{
 	public static final Comparator<ESUser> BY_NAME = new ByName();
 	 
 	@JestId
-	String id;
+    public String id;
 
-	String name;
+	public String name;
 	public ESUser(String uid, String uname) {
 		id = uid;
 		name = uname;

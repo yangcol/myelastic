@@ -15,6 +15,8 @@ import io.searchbox.indices.template.PutTemplate;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.SpanNearQueryBuilder;
+import org.elasticsearch.index.query.SpanQueryBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -265,7 +267,35 @@ public class ESUtil {
         return result;
     }
 
+    public static String[] analyzeTextByField(JestClient client, String index, String field, String text) throws Exception {
+        Analyze analyze = new Analyze.Builder().index(index).field(field).source(text).build();
+        JestResult jr = client.execute(analyze);
+        JsonObject jo = jr.getJsonObject();
+        JsonArray ja = jo.get("tokens").getAsJsonArray();
+        String[] result = new String[ja.size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = ja.get(i).getAsJsonObject().get("token").getAsString();
+        }
+        return result;
+    }
 
+
+    /**
+     * Unchecked
+     * @return
+     */
+    private static String slopQuery() {
+        SearchSourceBuilder ssb = new SearchSourceBuilder();
+        SpanNearQueryBuilder sb = QueryBuilders.spanNearQuery();
+        sb.slop(1);
+        sb.inOrder(true);
+        SpanQueryBuilder clause1 = QueryBuilders.spanTermQuery("n", "视频");
+        SpanQueryBuilder clause2 = QueryBuilders.spanTermQuery("n", "高清");
+        sb.clause(clause1);
+        sb.clause(clause2);
+        ssb.query(sb);
+        return ssb.toString();
+    }
     /**
      * Get hits
      * @param jr

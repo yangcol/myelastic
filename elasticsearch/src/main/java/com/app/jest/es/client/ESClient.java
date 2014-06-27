@@ -16,7 +16,6 @@ import io.searchbox.client.JestClientFactory;
 public class ESClient {
 
 	JestClient client;
-	ESSearchUser searchUser;
 	
 	/**
 	 * Build elastic searchByName client
@@ -64,7 +63,7 @@ public class ESClient {
 			throw new IllegalArgumentException("Invalid argument");
 		}
 		
-		return searchUser.search(client, name, offset, limit
+		return ESSearchUser.search(client, name, offset, limit
 						,ESSearchUser.ORDER.BYNAME);
 	}
 
@@ -77,7 +76,7 @@ public class ESClient {
 		if (null == id) {
 			throw new IllegalArgumentException("Invalid argument");
 		}
-		return searchUser.get(client, id);
+		return ESSearchUser.get(client, id);
 	}
 
 	
@@ -113,5 +112,13 @@ public class ESClient {
             throw new IllegalArgumentException("Invalid argument");
         }
         return ESSearchResource.searchByTag(client, tag, offset, limit);
+    }
+
+    /**
+     * Return jest client
+     * @return
+     */
+    public JestClient getClient() {
+        return this.client;
     }
 }

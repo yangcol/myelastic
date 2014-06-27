@@ -21,10 +21,12 @@ public class ESResource extends AbstractSearchResult{
 	public static final Comparator<ESResource> BY_NAME = new ByName();
 	
 	@JestId
-	private String id;
+	public String id;
 
-	String n;
-	
+	public String n;
+
+    public int[] tags;
+
 	public String getN() {
 		return n;
 	}
@@ -33,9 +35,10 @@ public class ESResource extends AbstractSearchResult{
 		this.n = n;
 	}
 
-	ESResource(String rid, String rname) {
-		id = rid;
-		n = rname;
+	public ESResource(String rid, String rname, int[] tags) {
+		this.id = rid;
+		this.n = rname;
+        this.tags = tags;
 	}
 	
 	public ObjectNode toJson() {
