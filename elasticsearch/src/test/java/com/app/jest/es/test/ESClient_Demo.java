@@ -52,7 +52,7 @@ public class ESClient_Demo {
 		// BulkableAction action = new Bulk();
 		// Bulk bulk = new Bulk(new Builder().addAction(action));
 		/*
-		 * try { SearchResult result = client.execute(search);
+		 * try { SearchResult result = client.execute(searchByName);
 		 * 
 		 * System.out.println(result.getJsonObject().toString());
 		 * 

@@ -55,8 +55,7 @@ public class ESClient {
 	 * @return <code>ESUser</code>
 	 */
 	public List<ESUser> getUserByName(String name, int offset, int limit) {
-		List<? extends AbstractSearchResult> searchusers = new ESSearchUser(
-				this.USER_DEST_INDEX).search(client, name, offset, limit);
+		List<? extends AbstractSearchResult> searchusers = ESSearchUser.search(client, name, offset, limit);
 		List<ESUser> users = new ArrayList<ESUser>();
 		if (null == searchusers) {
 			return users;
@@ -73,7 +72,7 @@ public class ESClient {
 	 * @return <code>ESUser</code>
 	 */
 	public ESUser getUserById(String id) {
-		return (ESUser) new ESSearchUser(this.USER_DEST_INDEX).get(client, id);
+		return ESSearchUser.get(client, id);
 	}
 
 	
@@ -85,8 +84,7 @@ public class ESClient {
 	 * @return <code>ESResource</code> list
 	 */
 	public List<ESResource> getResourceByName(String name, int offset, int limit) {
-		List<? extends AbstractSearchResult> searchresources = new ESSearchResource(
-				this.RESOURCE_DEST_INDEX).search(client, name, offset, limit);
+		List<? extends AbstractSearchResult> searchresources = ESSearchResource.searchByName(client, name, offset, limit);
 		List<ESResource> resources = new ArrayList<ESResource>();
 		if (null == searchresources) {
 			return resources;
@@ -96,27 +94,4 @@ public class ESClient {
 		}
 		return resources;
 	}
-	
-
-	public static void main(String[] args) {
-		Map<String, Integer> hosts = new HashMap<String, Integer>();
-		hosts.put("ldkjserver0014", 9200);
-		ESClient es = null;
-		try {
-			es = new ESClient(hosts, "nana2", "fastooth");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		List<ESUser> users = es.getUserByName("黄", 0, 20);
-		for (ESUser user : users) {
-			System.out.println(user.toJson().toString());
-		}
-		ESUser user = es.getUserById("10062950");
-//		for (ESUser user : users) {
-		System.out.println(user.toJson().toString());
-//		}
-		// es.test();
-	}
-
 }

@@ -2,7 +2,7 @@
  * @file ESBasicSearch.java
  * @author YangQing
  * @date 2014/5/14
- * @brief Interface for search result
+ * @brief Interface for searchByName result
  */
 package com.app.jest.es.client;
 
@@ -19,7 +19,7 @@ public interface ESBasicSearch {
 	
 	/**
 	 * Interface for get an resource or user
-	 * @param Jest client
+	 * @param jc client
 	 * @param id Id to get
 	 * @return <code>AbstractSearchResult</code>
 	 */

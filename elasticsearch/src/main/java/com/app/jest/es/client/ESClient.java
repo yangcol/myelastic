@@ -2,7 +2,7 @@
  * @file ESClient.java
  * @author YangQing
  * @date 2014/5/14
- * @brief Elastic search client
+ * @brief Elastic searchByName client
  */
 package com.app.jest.es.client;
 
@@ -17,10 +17,9 @@ public class ESClient {
 
 	JestClient client;
 	ESSearchUser searchUser;
-	ESSearchResource searchResource;
 	
 	/**
-	 * Build elastic search client
+	 * Build elastic searchByName client
 	 * @param hosts
 	 * @param resourceIndex
 	 * @param userIndex
@@ -46,8 +45,8 @@ public class ESClient {
 		JestClientFactory factory = new JestClientFactory();
 		client = factory.getObject();
 		client.setServers(set);
-		searchUser = new ESSearchUser(userIndex);
-		searchResource = new ESSearchResource(resourceIndex);
+		ESSearchUser.USER_DEST_INDEX = userIndex;
+        ESSearchResource.RESOURCE_DEST_INDEX = resourceIndex;
 	}
 
 	/**
@@ -96,16 +95,23 @@ public class ESClient {
 				|| limit <= 0) {
 			throw new IllegalArgumentException("Invalid argument");
 		}
-		return searchResource.search(client, name, offset, limit);
+		return ESSearchResource.searchByName(client, name, offset, limit);
 	}
 
 
+    /**
+     * Get resource by tag
+     * @param tag
+     * @param offset
+     * @param limit
+     * @return
+     */
     public List<ESResource> getResourceByTag(int[] tag, int offset, int limit) {
         if (null == tag
                 || offset < 0
                 || limit <= 0) {
             throw new IllegalArgumentException("Invalid argument");
         }
-        return searchResource.searchByTag(client, tag, offset, limit);
+        return ESSearchResource.searchByTag(client, tag, offset, limit);
     }
 }

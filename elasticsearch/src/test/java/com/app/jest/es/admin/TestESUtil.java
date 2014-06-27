@@ -1,6 +1,7 @@
 package com.app.jest.es.admin;
 
 import com.app.jest.es.util.ESTermAggregationItem;
+import com.app.jest.es.util.ESUtil;
 import com.google.gson.JsonObject;
 import io.searchbox.client.JestResult;
 import junit.framework.Assert;
@@ -14,19 +15,21 @@ import java.util.Map;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-public class TestESAdminClient extends TestCase {
-    public static ESAdminClient client;
+public class TestESUtil extends TestCase {
+    public static ESAdminClient adminclient;
+
     final String tindex = "my_index";
     final String ttype = "my_type";
     static {
         Map<String, Integer> hosts = new HashMap<String, Integer>();
         hosts.put("192.168.127.129", 9200);
-        client = new ESAdminClient(hosts);
+        adminclient = new ESAdminClient(hosts);
     }
     public void setUp() throws Exception {
 
-        if (!client.indiceExists(tindex)) {
-            client.createIndex(tindex);
+        if (!ESUtil.indiceExists(adminclient.getClient(), tindex)) {
+            ESUtil.createIndex(adminclient.getClient(), tindex);
+            ESUtil.flushIndex(adminclient.getClient());
         }
     }
 
@@ -35,8 +38,8 @@ public class TestESAdminClient extends TestCase {
      */
     public void testputSetting() {
         try {
-            client.deleteIndex(tindex);
-            client.putSetting(tindex, 1, 1);
+            ESUtil.deleteIndex(adminclient.getClient(), tindex);
+            ESUtil.putSetting(adminclient.getClient(), tindex, 1, 1);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail("Fail to put setting");
@@ -58,14 +61,14 @@ public class TestESAdminClient extends TestCase {
         }
 
         try {
-            client.putMapping("my_index", ttype, analyzer_ansj);
+            ESUtil.putMapping(adminclient.getClient(), tindex, ttype, analyzer_ansj);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail();
         }
 
         try {
-            JestResult jr = client.getMapping("my_index");
+            JestResult jr = ESUtil.getMapping(adminclient.getClient(), tindex);
             JsonObject jo = jr.getJsonObject();
             jo = jo.get("my_index").getAsJsonObject().get("mappings")
                     .getAsJsonObject().get(ttype).getAsJsonObject()
@@ -91,7 +94,7 @@ public class TestESAdminClient extends TestCase {
                     .field("aliasname").startObject().endObject().endObject()
                     .endObject();
             try {
-                client.putTemplate("my_template_1", template);
+                ESUtil.putTemplate(adminclient.getClient(), "my_template_1", template);
             } catch (Exception e) {
                 Assert.fail("Fail action, Fail to build a template");
             }
@@ -102,7 +105,7 @@ public class TestESAdminClient extends TestCase {
         }
 
         try {
-            JestResult jr = client.getTemplate("my_template_1");
+            JestResult jr = ESUtil.getTemplate(adminclient.getClient(),"my_template_1");
             JsonObject jo = jr.getJsonObject();
             jo = jo.get("my_template_1").getAsJsonObject();
             Assert.assertEquals("\"mytesttemplate\"", jo.get("template")
@@ -120,11 +123,11 @@ public class TestESAdminClient extends TestCase {
 
     public void testindiceExists() {
         try {
-            if (!client.indiceExists("a_test_string")) {
-                client.createIndex("a_test_index");
-                Assert.assertTrue(client.indiceExists("a_test_index"));
-                client.deleteIndex("a_test_index");
-                Assert.assertFalse(client.indiceExists("a_test_index"));
+            if (!ESUtil.indiceExists(adminclient.getClient(), "a_test_string")) {
+                ESUtil.createIndex(adminclient.getClient(),"a_test_index");
+                Assert.assertTrue(ESUtil.indiceExists(adminclient.getClient(), "a_test_index"));
+                ESUtil.deleteIndex(adminclient.getClient(),"a_test_index");
+                Assert.assertFalse(ESUtil.indiceExists(adminclient.getClient(),"a_test_index"));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -134,13 +137,13 @@ public class TestESAdminClient extends TestCase {
 
     public void testCreateIndex() {
         try {
-            client.deleteIndex(tindex);
+            ESUtil.deleteIndex(adminclient.getClient(), tindex);
         } catch (Exception e1) {
             e1.printStackTrace();
             Assert.fail();
         }
         try {
-            client.indiceExists(tindex);
+            ESUtil.indiceExists(adminclient.getClient(), tindex);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail("Fail to put setting");
@@ -150,22 +153,27 @@ public class TestESAdminClient extends TestCase {
     public void testAnalyze() throws Exception {
         final String tstring = "你好啊朋友";
         // Use stand tokenizer to test
-        String[] tokens = client.analyze(tindex, "standard", tstring);
+        String[] tokens = ESUtil.analyze(adminclient.getClient(), tindex, "standard", tstring);
         for (int i = 0; i < tokens.length; i++) {
             Assert.assertEquals(tstring.substring(i, i + 1), tokens[i]);
         }
-        client.deleteIndex(tindex);
+        ESUtil.deleteIndex(adminclient.getClient(), tindex);
     }
 
 
     public void testAddDoc_String_WithOutId() throws Exception {
         String source = jsonBuilder().startObject().field("user", "qingy")
                 .endObject().string();
-        client.addDoc(tindex, ttype, source);
-        client.flushIndex();
-        JestResult jr = client.query(tindex, ttype, "user", "qingy");
+        ESUtil.addDoc(adminclient.getClient(), tindex, ttype, source);
+        ESUtil.flushIndex(adminclient.getClient());
+        JestResult jr = ESUtil.query(adminclient.getClient(), tindex, ttype, "user", "qingy");
         //System.out.println(jr.getJsonString());
-        Assert.assertTrue(client.getHits(jr) > 0);
+        Assert.assertTrue(ESUtil.getHits(adminclient.getClient(), jr) > 0);
+    }
+
+
+    public void testGetHits() {
+
     }
 
     public void testAddDoc_String_WithId() {
@@ -177,10 +185,10 @@ public class TestESAdminClient extends TestCase {
             String source = jsonBuilder().startObject().field("user", "kimchy")
                     .field("tags", tags).endObject()
                     .string();
-            client.addDoc(tindex, ttype, idnum, source);
-            client.flushIndex();
-            Assert.assertEquals(true, client.docExists(tindex, ttype, idnum));
-            jr = client.getDoc(tindex, ttype, idnum);
+            ESUtil.addDoc(adminclient.getClient(), tindex, ttype, idnum, source);
+            ESUtil.flushIndex(adminclient.getClient());
+            Assert.assertEquals(true, ESUtil.docExists(adminclient.getClient(), tindex, ttype, idnum));
+            jr = ESUtil.getDoc(adminclient.getClient(), tindex, ttype, idnum);
 //            System.out.println("Get document: " + jr.getJsonString());
             Assert.assertEquals("kimchy", jr.getJsonObject().get("_source").getAsJsonObject().get("user")
                     .getAsString());
@@ -192,7 +200,7 @@ public class TestESAdminClient extends TestCase {
             Assert.fail("Fail to insert a doc");
         } finally {
             try {
-                client.deleteIndex(tindex);
+                ESUtil.deleteIndex(adminclient.getClient(), tindex);
             } catch (Exception e) {
                 e.printStackTrace();
                 Assert.fail("Fail to delete a document");
@@ -207,21 +215,22 @@ public class TestESAdminClient extends TestCase {
         a.id = id;
         a.author = "yang";
         a.content = "my content";
-        if (client.docExists(tindex, ttype, id)) {
-            client.deleteDocument(tindex, ttype, id);
+        if (ESUtil.docExists(adminclient.getClient(), tindex, ttype, id)) {
+            ESUtil.deleteDocument(adminclient.getClient(), tindex, ttype, id);
         }
-        Assert.assertFalse(client.docExists(tindex, ttype, id));
-        client.addDoc(tindex, ttype, a);
-        client.flushIndex();
-        Assert.assertTrue(client.docExists(tindex, ttype, id));
-        client.deleteDocument(tindex, ttype, id);
+        Assert.assertFalse(ESUtil.docExists(adminclient.getClient(), tindex, ttype, id));
+        ESUtil.addDoc(adminclient.getClient(), tindex, ttype, a);
+        ESUtil.flushIndex(adminclient.getClient());
+        Assert.assertTrue(ESUtil.docExists(adminclient.getClient(), tindex, ttype, id));
+        ESUtil.deleteDocument(adminclient.getClient(), tindex, ttype, id);
     }
 
     public void testGetDoc() throws Exception {
 
-        client.addDoc(tindex, ttype, "1", "{\"author\":\"qing\"," +
+        ESUtil.addDoc(adminclient.getClient(), tindex, ttype, "1", "{\"author\":\"qing\"," +
                 "\"content\":\"this is content string\"}");
-        Article a = client.getDoc(tindex, ttype, "1", Article.class);
+        ESUtil.flushIndex(adminclient.getClient());
+        Article a = ESUtil.getDoc(adminclient.getClient(), tindex, ttype, "1", Article.class);
         Assert.assertEquals(a.id, "1");
         Assert.assertEquals(a.author, "qing");
         Assert.assertEquals(a.content, "this is content string");
@@ -232,10 +241,11 @@ public class TestESAdminClient extends TestCase {
         a.id = "1234";
         a.author = "neverland";
         a.content = "my content";
-        client.addDoc(tindex, ttype, a);
-        JestResult jr = client.query(tindex, ttype, "author", a.author);
-        Assert.assertTrue("Can't find resource", client.getHits(jr) > 0);
-        client.deleteDocument(tindex, ttype, a.id);
+        ESUtil.addDoc(adminclient.getClient(), tindex, ttype, a);
+        ESUtil.flushIndex(adminclient.getClient());
+        JestResult jr = ESUtil.query(adminclient.getClient(), tindex, ttype, "author", a.author);
+        Assert.assertTrue("Can't find resource", ESUtil.getHits(adminclient.getClient(), jr) > 0);
+        ESUtil.deleteDocument(adminclient.getClient(), tindex, ttype, a.id);
     }
 
     public void testAggregations() throws Exception {
@@ -246,17 +256,10 @@ public class TestESAdminClient extends TestCase {
         };
 
         for (Article a: articles) {
-            client.addDoc(tindex, ttype, a);
+            ESUtil.addDoc(adminclient.getClient(), tindex, ttype, a);
         }
-        client.flushIndex();
-        List<ESTermAggregationItem> result = client.wordCount(tindex, ttype, "content", 10);
-        if (result == null) {
-            System.out.println("Get nothing");
-        } else {
-            for (ESTermAggregationItem item: result) {
-                //System.out.println(item.key + " " + item.doc_count);
-            }
-        }
+        ESUtil.flushIndex(adminclient.getClient());
+        List<ESTermAggregationItem> result = ESUtil.wordCount(adminclient.getClient(), tindex, ttype, "content", 10);
         Assert.assertNotNull(result);
         Assert.assertTrue(result.size() > 0);
         //System.out.println(ja.toString());
@@ -264,20 +267,22 @@ public class TestESAdminClient extends TestCase {
 
     public void testUpdateByObject() throws Exception {
         Article article = new Article("1", "qing", "i say a word");
-        client.addDoc(tindex, ttype, article);
-        client.flushIndex();
-        Article esa = client.getDoc(tindex, ttype, article.id, Article.class);
+        ESUtil.addDoc(adminclient.getClient(), tindex, ttype, article);
+        ESUtil.flushIndex(adminclient.getClient());
+        Article esa = ESUtil.getDoc(adminclient.getClient(), tindex, ttype, article.id, Article.class);
         Assert.assertEquals(esa.id, article.id);
         Article b = new Article(article);
         b.author = "yang";
-        client.update(tindex, ttype, b);
-        b = client.getDoc(tindex, ttype, b.id, Article.class);
+        ESUtil.update(adminclient.getClient(), tindex, ttype, b);
+        ESUtil.flushIndex(adminclient.getClient());
+        article = ESUtil.getDoc(adminclient.getClient(), tindex, ttype, article.id, Article.class);
+        Assert.assertEquals(b.author, article.author);
     }
 
     public void testCreateIndexWithShards() throws Exception {
-        client.createIndex("nevermore", 1, 1);
-        Assert.assertTrue(client.indiceExists("nevermore"));
-        client.deleteIndex("nevermore");
+        ESUtil.createIndex(adminclient.getClient(), "nevermore", 1, 1);
+        Assert.assertTrue(ESUtil.indiceExists(adminclient.getClient(), "nevermore"));
+        ESUtil.deleteIndex(adminclient.getClient(), "nevermore");
     }
 
 }

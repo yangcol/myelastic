@@ -55,11 +55,6 @@ public class ESSourceMapping {
             return null;
         }
 
-//        if (type.isAssignableFrom(ESAbstractAggregationItem.class)) {
-//
-//        }
-
-        // The following if
         Gson gson = new Gson();
         T obj = gson.fromJson(jr.getJsonObject().get("_source").toString(), type);
 

@@ -111,7 +111,7 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 	}
 
 	/**
-	 * Basic search interface
+	 * Basic searchByName interface
 	 * 
 	 * @param text
 	 * @param index
@@ -251,7 +251,7 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 	}
 
 	/**
-	 * Convert search result into user content list
+	 * Convert searchByName result into user content list
 	 * @param response
 	 * @return
 	 */
@@ -280,7 +280,7 @@ public class ESClient implements ESUserSearch, ESResourceSearch {
 	}
 
 	/**
-	 * Convert search result into resource content list
+	 * Convert searchByName result into resource content list
 	 * @param response
 	 * @return
 	 */
