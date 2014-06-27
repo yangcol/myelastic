@@ -98,4 +98,14 @@ public class ESClient {
 		}
 		return searchResource.search(client, name, offset, limit);
 	}
+
+
+    public List<ESResource> getResourceByTag(int[] tag, int offset, int limit) {
+        if (null == tag
+                || offset < 0
+                || limit <= 0) {
+            throw new IllegalArgumentException("Invalid argument");
+        }
+        return searchResource.searchByTag(client, tag, offset, limit);
+    }
 }

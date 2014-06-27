@@ -3,7 +3,6 @@ package com.app.jest.es.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.reflect.TypeToken;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -25,9 +24,6 @@ public abstract class ESAbstractAggregationItem {
 
     static public <T> List<T> getSourceListAsObjects(JsonArray ja, Class<T> type) {
         List<T> result = new LinkedList<T>();
-        if (null == result) {
-            return null;
-        }
         for (JsonElement je: ja) {
             result.add(getSourceAsObject(je.toString(), type));
         }

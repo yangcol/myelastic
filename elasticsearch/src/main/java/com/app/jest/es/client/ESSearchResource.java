@@ -25,6 +25,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
  */
 public class ESSearchResource implements ESBasicSearch{
 	final String RESOURCE_NAME_FIELD = "n";
+    final String RESOURCE_TAG_FIELD = "tags";
 	final String RESOURCE_ID_FIELD = "_id";
 	final int offset = 0;
 	final int limit = 30;
@@ -68,14 +69,53 @@ public class ESSearchResource implements ESBasicSearch{
 		}
 		return retValue;
 	}
-	
-	
+
+
+
+    public List<ESResource> searchByTag(JestClient jc, int[] tag, int offset, int limit) {
+        List<ESResource> retValue = new ArrayList<ESResource>();
+        try {
+            SearchResult result = match(jc, tag, offset, limit);
+            if (!result.isSucceeded()){
+                throw new Exception("Fail to find resources");
+            }
+            List<SearchResult.Hit<ESResource, Void>> hits = result
+                    .getHits(ESResource.class);
+            for (SearchResult.Hit<ESResource, Void> hit : hits) {
+                ESResource u = hit.source;
+                retValue.add(u);
+            }
+
+        } catch (Exception e) {
+            System.out.println("Something wrong with elasticsearch");
+            e.printStackTrace();
+        }
+        return retValue;
+    }
+
+    private SearchResult match(JestClient jc, Object field, int offset, int limit)
+            throws Exception {
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchQuery(RESOURCE_TAG_FIELD, field));
+        searchSourceBuilder.from(offset);
+        searchSourceBuilder.size(limit);
+        Search search = new Search.Builder(searchSourceBuilder.toString())
+                .addIndex(RESOURCE_DEST_INDEX)
+                .build();
+        return jc.execute(search);
+    }
+
 	public List<ESResource> search(JestClient jc,
 			String text) {
 		return search(jc, text, offset, limit);
 	}
 
-
+    /**
+     * Get resource
+     * @param jc JestClient
+     * @param id Id to get
+     * @return ESResource
+     */
 	public ESResource get(JestClient jc, String id) {
 		Get get = new Get.Builder(this.RESOURCE_DEST_INDEX, id).build();
 		ESResource rs = null;
@@ -88,4 +128,5 @@ public class ESSearchResource implements ESBasicSearch{
 		
 		return rs;
 	}
+
 }
