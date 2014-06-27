@@ -1,18 +1,18 @@
 package com.app.jest.es.admin;
 
 import com.app.jest.es.util.ESDocumentNotFoundException;
+import com.app.jest.es.util.ESOperationFailException;
 import com.app.jest.es.util.ESSourceMapping;
+import com.app.jest.es.util.ESTermAggregationItem;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import io.searchbox.annotations.JestId;
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;
 import io.searchbox.client.JestResult;
 import io.searchbox.client.config.ClientConfig;
 import io.searchbox.core.*;
-import io.searchbox.indices.Analyze;
-import io.searchbox.indices.CreateIndex;
-import io.searchbox.indices.DeleteIndex;
-import io.searchbox.indices.IndicesExists;
+import io.searchbox.indices.*;
 import io.searchbox.indices.mapping.GetMapping;
 import io.searchbox.indices.mapping.PutMapping;
 import io.searchbox.indices.template.GetTemplate;
@@ -20,22 +20,23 @@ import io.searchbox.indices.template.PutTemplate;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author YangQing
  * @version 1.0
+ * @since 2014-6-19
  * @file ESAdminClient
  * @date 2014-6-19
  * @brief ESAdminClient serves for administrator to operate index including
+ * @since 1.0
  * create, delete, update and so on.
  */
 public class ESAdminClient {
@@ -44,8 +45,7 @@ public class ESAdminClient {
 
     /**
      * Init admin client for correct hosts
-     *
-     * @param hosts
+     * @param hosts Host ip and port
      * @throws IllegalArgumentException
      */
     public ESAdminClient(Map<String, Integer> hosts)
@@ -68,6 +68,10 @@ public class ESAdminClient {
         JestClientFactory factory = new JestClientFactory();
         client = factory.getObject();
         client.setServers(set);
+    }
+
+    public void flushIndex() throws Exception {
+        checkReturnValue(client.execute(new Flush.Builder().build()));
     }
 
     void BuilkExcute(Bulk b) throws Exception {
@@ -104,7 +108,7 @@ public class ESAdminClient {
     }
 
     /**
-     *Add document
+     * Add document, no matter if it exits
      * @param index
      * @param type
      * @param source
@@ -113,9 +117,10 @@ public class ESAdminClient {
     public void addDoc(String index, String type, Object source)
             throws Exception {
         checkInput(index, type, source);
+        assert(source.getClass().isAnnotationPresent(JestId.class));
         Index index1 = new Index.Builder(source).index(index).type(type)
                 .build();
-        client.execute(index1);
+        checkReturnValue(client.execute(index1));
     }
 
 
@@ -144,6 +149,10 @@ public class ESAdminClient {
      */
     public boolean docExists(String index, String type, String id) throws Exception{
         JestResult jr = getDoc(index, type, id);
+        checkReturnValue(jr);
+        if (jr.getJsonObject().get("found") == null) {
+            return false;
+        }
         return jr.getJsonObject().get("found").getAsBoolean();
     }
 
@@ -183,8 +192,8 @@ public class ESAdminClient {
      */
     public void createIndex(String index, Map<String, String> settings)
             throws Exception {
-        client.execute(new CreateIndex.Builder(index).settings(settings)
-                .build());
+        checkReturnValue(client.execute(new CreateIndex.Builder(index).settings(settings)
+                .build()));
     }
 
     /**
@@ -293,23 +302,17 @@ public class ESAdminClient {
             result[i] = ja.get(i).getAsJsonObject().get("token").getAsString();
         }
         return result;
-        // Assert.assertEquals(token,
-        // ja.get(i).getAsJsonObject().get("token").toString());
     }
 
 
     /**
      * Get hits
-     * @param index
-     * @param ttype
-     * @param field
-     * @param text
+     * @param jr
      * @return
      * @throws Exception
      */
-    public int getHits(String index, String ttype, String field, String text)
+    public int getHits(JestResult jr)
             throws Exception  {
-        JestResult jr = query(index, ttype, field, text);
         return jr.getJsonObject().get("hits").getAsJsonObject().get("total").getAsInt();
     }
 
@@ -338,22 +341,30 @@ public class ESAdminClient {
      * Unchecked, use aggregations Demo:TermsBuilder tb =
      * AggregationBuilders.terms(aggrename).field(field).size(size);
      *
-     * @param index
-     * @param type
-     * @param  tb
+     * @param index String
+     * @param type  String
+     * @param field String
+     * @param maxSize int
      * @return
      * @throws Exception
      */
-    public JestResult aggregations(String index, String type, TermsBuilder tb)
+    public List<ESTermAggregationItem> wordCount(String index, String type, String field, int maxSize)
             throws Exception {
+        TermsBuilder tb = AggregationBuilders.terms("wordcount").field(field).size(maxSize);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.aggregation(tb);
-        searchSourceBuilder.toString();
+        System.out.println(searchSourceBuilder.toString());
         Search search = new Search.Builder(searchSourceBuilder.toString())
                 .addIndex(index).addType(type).build();
-        return client.execute(search);
+        JestResult jr =  client.execute(search);
+        //JsonArray buckets = jr.getJsonObject().get("aggregations").getAsJsonObject().get("wordcount").getAsJsonObject().get("buckets").getAsJsonArray();
+        return ESSourceMapping.getAggregationObjects(jr, "wordcount", ESTermAggregationItem.class);
     }
 
+
+//    public <T>LinkedList<T> aggregations(String index, String type, TermsBuilder tb) {
+//        aggregations(index, type, tb)
+//    }
     /**
      * Get mappings, see demo or unit test for more usage
      *
@@ -364,7 +375,9 @@ public class ESAdminClient {
     public JestResult getMapping(String index) throws Exception {
         GetMapping getMapping = new GetMapping.Builder().addIndex(index)
                 .build();
-        return client.execute(getMapping);
+        JestResult jr = client.execute(getMapping);
+        checkReturnValue(jr);
+        return jr;
     }
 
     /**
@@ -372,7 +385,7 @@ public class ESAdminClient {
      * @param inputs
      * @throws NullPointerException If input is null
      */
-    public void checkInput(Object... inputs) {
+    private void checkInput(Object... inputs) {
         for (Object in: inputs) {
             if (null == in) {
                 logger.error("Input param null");
@@ -381,14 +394,27 @@ public class ESAdminClient {
         }
     }
 
-    void update() throws Exception {
-        String script = "{\n"
-                + "    \"script\" : \"ctx._source.tags += tag\",\n"
-                + "    \"params\" : {\n" + "        \"tag\" : \"blue\"\n"
-                + "    }\n" + "}";
+    private void checkReturnValue(JestResult jr) {
+        if (null == jr) {
+            throw new NullPointerException("Jest return null");
+        }
 
-        client.execute(new Update.Builder(script).index("twitter")
-                .type("tweet").id("1").build());
+        if (null != jr.getJsonObject().get("error")) {
+            throw new ESOperationFailException("Operation failed");
+        }
+    }
+    /**
+     * Update a document
+     * @param index
+     * @param type
+     * @param source
+     * @throws Exception
+     */
+    public void update(String index, String type, Object source) throws Exception {
+        checkInput(index, type, source);
+        assert(source.getClass().isAnnotationPresent(JestId.class));
+        client.execute(new Update.Builder(source).index(index)
+                .type(type).build());
     }
 
     /**

@@ -17,4 +17,18 @@ class Article {
 
     public String author;
     public String content;
+
+    public Article() {}
+
+    public Article(String id, String author, String content) {
+        this.id = id;
+        this.author = author;
+        this.content = content;
+    }
+
+    public Article(Article a) {
+        this.id = a.id;
+        this.author = a.author;
+        this.content = a.content;
+    }
 }
